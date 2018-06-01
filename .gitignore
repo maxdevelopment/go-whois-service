@@ -12,3 +12,5 @@
 *.out
 .idea/
 web/node_modules
+vendor
+!vendor/vendor.json
