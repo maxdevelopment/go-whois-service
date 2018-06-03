@@ -1,0 +1,31 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "Pc2ORQp+VY3Un/dkh4QwLC7R6lE=",
+			"path": "github.com/BurntSushi/toml",
+			"revision": "a368813c5e648fee92e5f6c30e3944ff9d5e8895",
+			"revisionTime": "2017-06-26T11:06:00Z"
+		},
+		{
+			"checksumSHA1": "g/V4qrXjUGG9B+e3hB+4NAYJ5Gs=",
+			"path": "github.com/gorilla/context",
+			"revision": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
+			"revisionTime": "2016-08-17T18:46:32Z"
+		},
+		{
+			"checksumSHA1": "TyrXOBHvvLtawmxfdjrju452928=",
+			"path": "github.com/gorilla/mux",
+			"revision": "e0b5abaaae35242fa74372f26c24107711702a4e",
+			"revisionTime": "2018-05-26T22:17:21Z"
+		},
+		{
+			"checksumSHA1": "mB5P3/XIC7r4Jc0/K86NA9Jq2CA=",
+			"path": "github.com/gorilla/websocket",
+			"revision": "c17c80cb48b806045fc338c94c849909a2e41c12",
+			"revisionTime": "2018-05-29T01:35:52Z"
+		}
+	],
+	"rootPath": "github.com/maxdevelopment/go-whois-service"
+}
