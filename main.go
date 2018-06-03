@@ -8,6 +8,7 @@ import (
 	"time"
 	"github.com/BurntSushi/toml"
 	"fmt"
+	"github.com/maxdevelopment/go-whois-service/ws"
 )
 
 type server struct {
@@ -24,9 +25,13 @@ func main() {
 		return
 	}
 
+	hub := ws.H
+	go hub.Run()
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", GetIndex).Methods("GET")
 	router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir("web/dist/"))))
+	router.HandleFunc("/join", ws.Handler).Methods("GET")
 
 	srv := &http.Server{
 		Handler:      router,

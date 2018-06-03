@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"github.com/gorilla/websocket"
 	"log"
-	"fmt"
 )
 
 type connection struct {
@@ -33,5 +32,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		conn: conn,
 	}
 
-	fmt.Println(c)
+	H.register <- subscription{
+		c,
+	}
 }
