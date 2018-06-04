@@ -14,8 +14,6 @@ import (
 type server struct {
 	IP           string `toml:"server_ip"`
 	Port         string `toml:"server_port"`
-	WriteTimeout int    `toml:"server_write_timeout"`
-	ReadTimeout  int    `toml:"server_read_timeout"`
 }
 
 func main() {

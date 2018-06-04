@@ -2,39 +2,32 @@ package ws
 
 import "fmt"
 
-type message struct {
-	data []byte
-	room string
-}
-
-type subscription struct {
-	conn *connection
-	//room string
-}
-
 type hub struct {
-	rooms map[string]map[*connection]bool
-	broadcast chan message
-	register chan subscription
-	unregister chan subscription
+	clients    map[*Client]bool
+	register   chan *Client
+	unregister chan *Client
 }
 
 var H = hub{
-	broadcast:  make(chan message),
-	register:   make(chan subscription),
-	unregister: make(chan subscription),
-	rooms:      make(map[string]map[*connection]bool),
+	clients:    make(map[*Client]bool),
+	register:   make(chan *Client),
+	unregister: make(chan *Client),
 }
 
 func (h *hub) Run() {
 	for {
 		select {
-		case s := <-h.register:
-			fmt.Println(s)
-		case s := <-h.unregister:
-			fmt.Println(s)
-		case m := <-h.broadcast:
-			fmt.Println(m)
+		case client := <-h.register:
+			fmt.Println("register", client)
+			h.clients[client] = true
+			fmt.Println(h.clients)
+		case client := <-h.unregister:
+			fmt.Println("unregister", client)
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
+			}
+			fmt.Println(h.clients)
 		}
 	}
 }
