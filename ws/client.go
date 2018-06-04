@@ -5,12 +5,11 @@ import (
 	"net/http"
 	"log"
 	"time"
-	"fmt"
 )
 
 const (
-	pongWait = 60 * time.Second
-	maxMessageSize = 512
+	writeWait  = 5 * time.Second
+	pingPeriod = 5 * time.Second
 )
 
 type Client struct {
@@ -40,30 +39,57 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	H.register <- client
-	go client.readPump()
+	go client.listenHub()
+	go client.isConnected()
 }
 
-func (c *Client) readPump() {
+func (c *Client) listenHub() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		H.unregister <- c
+		c.conn.Close()
+	}()
+	for {
+		select {
+		case message, ok := <-c.send:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			w, err := c.conn.NextWriter(websocket.TextMessage)
+			if err != nil {
+				return
+			}
+			w.Write(message)
+			for i := 0; i < len(c.send); i++ {
+				w.Write(<-c.send)
+			}
+
+			if err := w.Close(); err != nil {
+				return
+			}
+
+		case <-ticker.C:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}
+}
+
+func (c *Client) isConnected() {
 
 	defer func() {
 		H.unregister <- c
 		c.conn.Close()
 	}()
 
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
-
 	for {
-		_, message, err := c.conn.ReadMessage()
-
+		_, _, err := c.conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Printf("error: %v", err)
-			}
-			break
+			return
 		}
-
-		fmt.Println(message)
 	}
 }
