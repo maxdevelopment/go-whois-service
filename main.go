@@ -9,6 +9,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"fmt"
 	"github.com/maxdevelopment/go-whois-service/ws"
+	"github.com/maxdevelopment/go-whois-service/service"
 )
 
 type server struct {
@@ -25,6 +26,9 @@ func main() {
 
 	hub := ws.H
 	go hub.Run()
+
+	s := service.WH
+	s.Listen()
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", GetIndex).Methods("GET")
