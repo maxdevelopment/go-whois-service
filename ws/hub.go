@@ -1,6 +1,8 @@
 package ws
 
-import "github.com/maxdevelopment/go-whois-service/service"
+import (
+	"github.com/maxdevelopment/go-whois-service/service"
+)
 
 type hub struct {
 	clients    map[*Client]bool
@@ -19,12 +21,16 @@ func (h *hub) Run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
-			service.WH.ClientIPs <- client.conn.RemoteAddr()
+			service.WH.ClientIPs <- client.remoteAddr
 
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
+			}
+		case message:= <-service.Broadcast:
+			for client := range h.clients {
+				client.send <- message
 			}
 		}
 	}

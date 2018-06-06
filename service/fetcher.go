@@ -3,7 +3,6 @@ package service
 import (
 	"net/http"
 	"time"
-	"fmt"
 	"encoding/json"
 	"github.com/maxdevelopment/go-whois-service/config"
 	"strings"
@@ -38,8 +37,8 @@ func (f *fetcher) getLink(ip string) string {
 	return strings.Replace(link, "$IP$", ip, -1)
 }
 
-func (f *fetcher) getData(ip string) error {
-	link := f.getLink(ip)
+func (f *fetcher) getData(ci *clientInfo) error {
+	link := f.getLink(ci.Ip)
 	resp, err := f.client.Get(link)
 	if err != nil {
 		return err
@@ -48,9 +47,9 @@ func (f *fetcher) getData(ip string) error {
 
 	rd := RespData{}
 	json.NewDecoder(resp.Body).Decode(&rd)
-
-	fmt.Println(rd.City)
-	fmt.Println(rd.Country)
+	ci.City = rd.City
+	ci.Country = rd.Country
+	ci.Link = link
 
 	return nil
 }

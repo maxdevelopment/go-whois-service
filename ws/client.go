@@ -13,8 +13,9 @@ const (
 )
 
 type Client struct {
-	conn *websocket.Conn
-	send chan []byte
+	conn       *websocket.Conn
+	send       chan []byte
+	remoteAddr string
 }
 
 var upgrader = websocket.Upgrader{
@@ -34,8 +35,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &Client{
-		conn: conn,
-		send: make(chan []byte),
+		conn:       conn,
+		send:       make(chan []byte),
+		//remoteAddr: r.RemoteAddr,
+		remoteAddr: "5.61.45.181:5525",
 	}
 
 	H.register <- client
