@@ -5,22 +5,42 @@ import (
 	"time"
 	"fmt"
 	"encoding/json"
+	"github.com/maxdevelopment/go-whois-service/config"
+	"strings"
 )
 
 type fetcher struct {
-	client *http.Client
+	client  *http.Client
+	servers map[string]*fetchServer
 }
 
 type RespData struct {
-	City string
+	City    string
 	Country string
 }
 
-func (f *fetcher) getData() error {
-	//test
-	//resp, err := f.client.Get("http://ip-api.com/json/5.61.45.181")
-	//resp, err := f.client.Get("http://ipapi.co/5.61.45.181/json/")
-	resp, err := f.client.Get("http://ipfind.co/?ip=5.61.45.181")
+func (f *fetcher) getLink(ip string) string {
+
+	var du time.Duration
+	var link string
+
+	for key, srv := range f.servers {
+		diff := time.Now().Sub(srv.usedAt)
+		if diff > du {
+			du = diff
+			link = key
+		}
+	}
+
+	srv := f.servers[link]
+	srv.usedAt = time.Now()
+
+	return strings.Replace(link, "$IP$", ip, -1)
+}
+
+func (f *fetcher) getData(ip string) error {
+	link := f.getLink(ip)
+	resp, err := f.client.Get(link)
 	if err != nil {
 		return err
 	}
@@ -35,6 +55,21 @@ func (f *fetcher) getData() error {
 	return nil
 }
 
-var fetch = fetcher{
-	client: &http.Client{Timeout: 10 * time.Second},
+var Fetch = fetcher{
+	client:  &http.Client{Timeout: 10 * time.Second},
+	servers: make(map[string]*fetchServer),
+}
+
+func (f *fetcher) SetServers() {
+	for _, link := range config.Get.Servers {
+		f.servers[link] = &fetchServer{
+			link:   link,
+			usedAt: time.Now(),
+		}
+	}
+}
+
+type fetchServer struct {
+	link   string
+	usedAt time.Time
 }

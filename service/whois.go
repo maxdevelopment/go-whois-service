@@ -19,9 +19,9 @@ func (ci *clientInfo) isValidCache() bool {
 	return true
 }
 
-func (ci *clientInfo) fetch() {
+func (ci *clientInfo) fetch(ip string) {
 	fmt.Println("FETCHING")
-	fetch.getData()
+	Fetch.getData(ip)
 }
 
 type cached struct {
@@ -50,21 +50,20 @@ func (wh *whois) Listen() {
 			fmt.Println(ip)
 			if cacheData, ok := cache.IPs[ip]; ok {
 				fmt.Println("ip present in the cache")
-				fmt.Println(cacheData.validThru)
 
 				if cacheData.isValidCache() {
 					fmt.Println("VALID CACHE")
 				} else {
 					fmt.Println("NOT VALID CACHE")
 					cacheData.validThru = time.Now().Add(time.Second * config.Get.ValidThru)
-					cacheData.fetch()
+					cacheData.fetch(ip)
 				}
 			} else {
-				fmt.Println("NEW IP")
+				fmt.Println("new ip")
 				ci := &clientInfo{
 					validThru: time.Now().Add(time.Second * config.Get.ValidThru),
 				}
-				ci.fetch()
+				ci.fetch(ip)
 				cache.IPs[ip] = ci
 			}
 		}

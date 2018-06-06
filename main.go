@@ -13,6 +13,7 @@ import (
 
 func main() {
 	config.ReadConfig()
+	service.Fetch.SetServers()
 
 	hub := ws.H
 	go hub.Run()
