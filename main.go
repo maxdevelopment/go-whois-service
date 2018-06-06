@@ -6,23 +6,13 @@ import (
 	"io/ioutil"
 	"log"
 	"time"
-	"github.com/BurntSushi/toml"
-	"fmt"
 	"github.com/maxdevelopment/go-whois-service/ws"
 	"github.com/maxdevelopment/go-whois-service/service"
+	"github.com/maxdevelopment/go-whois-service/config"
 )
 
-type server struct {
-	IP           string `toml:"server_ip"`
-	Port         string `toml:"server_port"`
-}
-
 func main() {
-	var config server
-	if _, err := toml.DecodeFile("config/app.toml", &config); err != nil {
-		fmt.Println(err)
-		return
-	}
+	config.ReadConfig()
 
 	hub := ws.H
 	go hub.Run()
@@ -37,7 +27,7 @@ func main() {
 
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         config.IP + ":" + config.Port,
+		Addr:         config.Get.IP + ":" + config.Get.Port,
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  10 * time.Second,
 	}

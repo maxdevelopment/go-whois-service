@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"time"
+	"github.com/maxdevelopment/go-whois-service/config"
 )
 
 type clientInfo struct {
@@ -55,13 +56,13 @@ func (wh *whois) Listen() {
 					fmt.Println("VALID CACHE")
 				} else {
 					fmt.Println("NOT VALID CACHE")
-					//delete(cache.IPs, ip)
+					cacheData.validThru = time.Now().Add(time.Second * config.Get.ValidThru)
 					cacheData.fetch()
 				}
 			} else {
 				fmt.Println("NEW IP")
 				ci := &clientInfo{
-					validThru: time.Now().Add(time.Second * 10),
+					validThru: time.Now().Add(time.Second * config.Get.ValidThru),
 				}
 				ci.fetch()
 				cache.IPs[ip] = ci
