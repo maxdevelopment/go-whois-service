@@ -38,7 +38,27 @@ var WhoIs = &whoiser{
 	servers: make(map[string]*fetchServers),
 }
 
+func (wh *whoiser) flushCache() {
+	for key, cache := range dataCache {
+		diff := time.Now().Sub(cache.validThru)
+		if diff > 0 {
+			delete(dataCache, key)
+		}
+	}
+}
+
 func (wh *whoiser) SetServers() {
+	ticker := time.NewTicker(time.Second * config.Get.ValidThru)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				wh.flushCache()
+			}
+		}
+	}()
+
+
 	for _, link := range config.Get.Servers {
 		wh.servers[link] = &fetchServers{
 			link:   link,

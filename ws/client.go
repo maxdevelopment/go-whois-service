@@ -6,7 +6,6 @@ import (
 	"log"
 	"time"
 	"github.com/gorilla/mux"
-	"fmt"
 )
 
 const (
@@ -56,7 +55,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	WhoIs.getData(client)
 
 	H.register <- client
-	//service.ConnectedClients <- client
 	go client.listenHub()
 	go client.isConnected()
 }
@@ -101,7 +99,6 @@ func (c *Client) isConnected() {
 	for {
 		_, _, err := c.conn.ReadMessage()
 		if err != nil {
-			fmt.Println("read msg error")
 			return
 		}
 	}
