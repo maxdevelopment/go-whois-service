@@ -12,14 +12,11 @@ import (
 
 func main() {
 	config.ReadConfig()
-	//service.Fetch.SetServers()
 
 	ws.WhoIs.SetServers()
 
 	hub := ws.H
 	go hub.Run()
-
-	//service.Listen()
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", GetIndex).Methods("GET")

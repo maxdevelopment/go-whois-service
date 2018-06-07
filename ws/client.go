@@ -15,10 +15,14 @@ const (
 )
 
 type Client struct {
-	id         string
+	Id         string `json:"id"`
 	conn       *websocket.Conn
 	send       chan []byte
-	remoteAddr string
+	RemoteAddr string `json:"remote_addr"`
+	City       string `json:"city"`
+	Country    string `json:"country"`
+	Cached     bool   `json:"cached"`
+	Link       string `json:"link"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -38,13 +42,15 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := mux.Vars(r)
+	//ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 
 	client := &Client{
-		id:   params["id"],
+		Id:   params["id"],
 		conn: conn,
 		send: make(chan []byte),
 		//remoteAddr: r.RemoteAddr,
-		remoteAddr: "5.61.45.181:5525",
+		RemoteAddr: "5.61.45.181",
+		Cached:     true,
 	}
 
 	WhoIs.getData(client)
@@ -52,13 +58,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	H.register <- client
 	//service.ConnectedClients <- client
 	go client.listenHub()
-	//client.isConnected()
+	go client.isConnected()
 }
 
 func (c *Client) listenHub() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
-		fmt.Println("Unreg deff")
 		H.unregister <- c
 		c.conn.Close()
 	}()
@@ -92,18 +97,12 @@ func (c *Client) listenHub() {
 	}
 }
 
-//func (c *Client) isConnected() {
-//
-//	defer func() {
-//		fmt.Println("Connected deff")
-//		H.unregister <- c
-//		c.conn.Close()
-//	}()
-//
-//	for {
-//		_, _, err := c.conn.ReadMessage()
-//		if err != nil {
-//			return
-//		}
-//	}
-//}
+func (c *Client) isConnected() {
+	for {
+		_, _, err := c.conn.ReadMessage()
+		if err != nil {
+			fmt.Println("read msg error")
+			return
+		}
+	}
+}

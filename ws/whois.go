@@ -5,6 +5,8 @@ import (
 	"time"
 	"github.com/maxdevelopment/go-whois-service/config"
 	"fmt"
+	"strings"
+	"encoding/json"
 )
 
 type whoiser struct {
@@ -14,11 +16,19 @@ type whoiser struct {
 
 type cached struct {
 	validThru time.Time
+	city      string
+	country   string
+	link      string
 }
 
 type fetchServers struct {
 	link   string
 	usedAt time.Time
+}
+
+type respData struct {
+	City    string
+	Country string
 }
 
 var dataCache = make(map[string]*cached)
@@ -39,22 +49,64 @@ func (wh *whoiser) SetServers() {
 
 func (wh *whoiser) isValidCache(client *Client) (*cached, bool) {
 
-	if _, ok := dataCache[client.remoteAddr]; !ok {
+	if _, ok := dataCache[client.RemoteAddr]; !ok {
 		return nil, false
 	}
 
-	diff := time.Now().Sub(dataCache[client.remoteAddr].validThru)
+	diff := time.Now().Sub(dataCache[client.RemoteAddr].validThru)
 	if diff >= 0 {
-		delete(dataCache, client.remoteAddr)
+		delete(dataCache, client.RemoteAddr)
 		return nil, false
 	}
 
-	return dataCache[client.remoteAddr], true
+	return dataCache[client.RemoteAddr], true
+}
+
+func (wh *whoiser) getLink(client *Client) string {
+
+	var du time.Duration
+	var link string
+
+	for key, srv := range wh.servers {
+		diff := time.Now().Sub(srv.usedAt)
+		if diff > du {
+			du = diff
+			link = key
+		}
+	}
+
+	srv := wh.servers[link]
+	srv.usedAt = time.Now()
+
+	return strings.Replace(link, "$IP$", client.RemoteAddr, -1)
+}
+
+func (wh *whoiser) fetchData(client *Client) {
+	link := wh.getLink(client)
+
+	resp, err := wh.client.Get(link)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+
+	rd := respData{}
+	json.NewDecoder(resp.Body).Decode(&rd)
+	dataCache[client.RemoteAddr] = &cached{
+		validThru: time.Now().Add(time.Second * config.Get.ValidThru),
+		city:      rd.City,
+		country:   rd.Country,
+		link:      link,
+	}
 }
 
 func (wh *whoiser) getData(client *Client) {
-	fmt.Println(client)
 	if _, ok := wh.isValidCache(client); !ok {
-		fmt.Println("NOT OK")
+		client.Cached = false
+		wh.fetchData(client)
 	}
+	cache := dataCache[client.RemoteAddr]
+	client.City = cache.city
+	client.Country = cache.country
+	client.Link = cache.link
 }
