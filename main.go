@@ -7,24 +7,24 @@ import (
 	"log"
 	"time"
 	"github.com/maxdevelopment/go-whois-service/ws"
-	"github.com/maxdevelopment/go-whois-service/service"
 	"github.com/maxdevelopment/go-whois-service/config"
 )
 
 func main() {
 	config.ReadConfig()
-	service.Fetch.SetServers()
+	//service.Fetch.SetServers()
+
+	ws.WhoIs.SetServers()
 
 	hub := ws.H
 	go hub.Run()
 
-	s := service.WH
-	s.Listen()
+	//service.Listen()
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", GetIndex).Methods("GET")
 	router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir("web/dist/"))))
-	router.HandleFunc("/join", ws.Handler).Methods("GET")
+	router.HandleFunc("/join/{id}", ws.Handler).Methods("GET")
 
 	srv := &http.Server{
 		Handler:      router,

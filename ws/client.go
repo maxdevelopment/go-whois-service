@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"log"
 	"time"
+	"github.com/gorilla/mux"
+	"fmt"
 )
 
 const (
@@ -13,6 +15,7 @@ const (
 )
 
 type Client struct {
+	id         string
 	conn       *websocket.Conn
 	send       chan []byte
 	remoteAddr string
@@ -34,21 +37,28 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	params := mux.Vars(r)
+
 	client := &Client{
-		conn:       conn,
-		send:       make(chan []byte),
+		id:   params["id"],
+		conn: conn,
+		send: make(chan []byte),
 		//remoteAddr: r.RemoteAddr,
 		remoteAddr: "5.61.45.181:5525",
 	}
 
+	WhoIs.getData(client)
+
 	H.register <- client
+	//service.ConnectedClients <- client
 	go client.listenHub()
-	go client.isConnected()
+	//client.isConnected()
 }
 
 func (c *Client) listenHub() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
+		fmt.Println("Unreg deff")
 		H.unregister <- c
 		c.conn.Close()
 	}()
@@ -82,17 +92,18 @@ func (c *Client) listenHub() {
 	}
 }
 
-func (c *Client) isConnected() {
-
-	defer func() {
-		H.unregister <- c
-		c.conn.Close()
-	}()
-
-	for {
-		_, _, err := c.conn.ReadMessage()
-		if err != nil {
-			return
-		}
-	}
-}
+//func (c *Client) isConnected() {
+//
+//	defer func() {
+//		fmt.Println("Connected deff")
+//		H.unregister <- c
+//		c.conn.Close()
+//	}()
+//
+//	for {
+//		_, _, err := c.conn.ReadMessage()
+//		if err != nil {
+//			return
+//		}
+//	}
+//}

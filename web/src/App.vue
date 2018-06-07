@@ -10,10 +10,12 @@
   export default {
     name: 'app',
     data: () => ({
+      id: null,
       ws: null
     }),
     beforeMount() {
-      this.ws = new WebSocket(Routes.socketPath())
+      this.id = Math.random().toString(36).substr(2, 9)
+      this.ws = new WebSocket(Routes.socketPath(this.id))
     }
   }
 </script>
