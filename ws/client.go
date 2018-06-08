@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 	"github.com/gorilla/mux"
+	"net"
 )
 
 const (
@@ -41,14 +42,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := mux.Vars(r)
-	//ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 
 	client := &Client{
 		Id:   params["id"],
 		conn: conn,
 		send: make(chan []byte),
-		//remoteAddr: r.RemoteAddr,
-		RemoteAddr: "5.61.45.181",
+		RemoteAddr: ip,
 		Cached:     true,
 	}
 
